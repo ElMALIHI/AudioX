@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AudioX MCP Client</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        button { padding: 10px 15px; background: #4CAF50; color: white; border: none; cursor: pointer; }
+        audio { width: 100%; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>AudioX MCP Client</h1>
+    
+    <div class="form-group">
+        <label for="server-url">Server URL:</label>
+        <input type="text" id="server-url" value="https://mint-gator-truly.ngrok-free.app" style="width: 100%;">
+    </div>
+    
+    <h2>Text-to-Audio</h2>
+    <div class="form-group">
+        <label for="t2a-prompt">Text Prompt:</label>
+        <input type="text" id="t2a-prompt" value="Typing on a keyboard" style="width: 100%;">
+    </div>
+    <button onclick="generateT2A()">Generate Audio</button>
+    <div id="t2a-result"></div>
+    
+    <h2>Text-to-Music</h2>
+    <div class="form-group">
+        <label for="t2m-prompt">Text Prompt:</label>
+        <input type="text" id="t2m-prompt" value="A music with piano and violin" style="width: 100%;">
+    </div>
+    <button onclick="generateT2M()">Generate Music</button>
+    <div id="t2m-result"></div>
+    
+    <h2>Video-to-Audio/Music</h2>
+    <div class="form-group">
+        <label for="video-file">Video File:</label>
+        <input type="file" id="video-file" accept="video/*">
+    </div>
+    <div class="form-group">
+        <label for="video-prompt">Text Prompt (optional):</label>
+        <input type="text" id="video-prompt" value="Generate audio for the video" style="width: 100%;">
+    </div>
+    <button onclick="generateV2A()">Generate Audio</button>
+    <button onclick="generateV2M()">Generate Music</button>
+    <div id="video-result"></div>
+    
+    <script>
+        async function generateT2A() {
+            const serverUrl = document.getElementById('server-url').value;
+            const prompt = document.getElementById('t2a-prompt').value;
+            const resultDiv = document.getElementById('t2a-result');
+            
+            resultDiv.innerHTML = 'Generating audio...';
+            
+            try {
+                const response = await fetch(`${serverUrl}/t2a`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text_prompt: prompt
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                const audioUrl = URL.createObjectURL(blob);
+                
+                resultDiv.innerHTML = `
+                    <p>Audio generated successfully!</p>
+                    <audio controls src="${audioUrl}"></audio>
+                    <p><a href="${audioUrl}" download="generated_audio.wav">Download Audio</a></p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `Error: ${error.message}`;
+            }
+        }
+        
+        async function generateT2M() {
+            const serverUrl = document.getElementById('server-url').value;
+            const prompt = document.getElementById('t2m-prompt').value;
+            const resultDiv = document.getElementById('t2m-result');
+            
+            resultDiv.innerHTML = 'Generating music...';
+            
+            try {
+                const response = await fetch(`${serverUrl}/t2m`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text_prompt: prompt
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                const audioUrl = URL.createObjectURL(blob);
+                
+                resultDiv.innerHTML = `
+                    <p>Music generated successfully!</p>
+                    <audio controls src="${audioUrl}"></audio>
+                    <p><a href="${audioUrl}" download="generated_music.wav">Download Music</a></p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `Error: ${error.message}`;
+            }
+        }
+        
+        async function generateV2A() {
+            const serverUrl = document.getElementById('server-url').value;
+            const videoFile = document.getElementById('video-file').files[0];
+            const prompt = document.getElementById('video-prompt').value;
+            const resultDiv = document.getElementById('video-result');
+            
+            if (!videoFile) {
+                resultDiv.innerHTML = 'Please select a video file.';
+                return;
+            }
+            
+            resultDiv.innerHTML = 'Generating audio...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('video', videoFile);
+                formData.append('text_prompt', prompt);
+                
+                const response = await fetch(`${serverUrl}/v2a`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                const audioUrl = URL.createObjectURL(blob);
+                
+                resultDiv.innerHTML = `
+                    <p>Audio generated successfully!</p>
+                    <audio controls src="${audioUrl}"></audio>
+                    <p><a href="${audioUrl}" download="generated_audio.wav">Download Audio</a></p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `Error: ${error.message}`;
+            }
+        }
+        
+        async function generateV2M() {
+            const serverUrl = document.getElementById('server-url').value;
+            const videoFile = document.getElementById('video-file').files[0];
+            const prompt = document.getElementById('video-prompt').value;
+            const resultDiv = document.getElementById('video-result');
+            
+            if (!videoFile) {
+                resultDiv.innerHTML = 'Please select a video file.';
+                return;
+            }
+            
+            resultDiv.innerHTML = 'Generating music...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('video', videoFile);
+                formData.append('text_prompt', prompt);
+                
+                const response = await fetch(`${serverUrl}/v2m`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                const audioUrl = URL.createObjectURL(blob);
+                
+                resultDiv.innerHTML = `
+                    <p>Music generated successfully!</p>
+                    <audio controls src="${audioUrl}"></audio>
+                    <p><a href="${audioUrl}" download="generated_music.wav">Download Music</a></p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
